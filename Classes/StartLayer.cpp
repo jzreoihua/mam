@@ -8,8 +8,8 @@ using namespace cocos2d;
 StartLayer::StartLayer()
 {
 	
-	if (UserDefault::getInstance()->getBoolForKey("ismicpalying"))
-		SimpleAudioEngine::sharedEngine()->playBackgroundMusic("main_music.mp3", true);
+	/*if (UserDefault::getInstance()->getBoolForKey("ismicpalying"))
+		SimpleAudioEngine::sharedEngine()->playBackgroundMusic("main_music.mp3", true);*/
 	/*if (!UserDefault::getInstance()->getBoolForKey("iseffectpalying"))
 		SimpleAudioEngine::getInstance()->setEffectsVolume(0.0);*/
 }
@@ -149,7 +149,13 @@ bool StartLayer::init()
 		_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener->clone(), pSprite->getChildByName("startui")->getChildByName("kaishiyouxi_3"));
 		_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener->clone(), pSprite->getChildByName("startui")->getChildByName("zhan_5"));
 		_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener->clone(), pSprite->getChildByName("startui")->getChildByName("yuyan_4")); 
-		_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener->clone(), pSprite->getChildByName("startui")->getChildByName("notouch"));
+
+
+		auto notouchListener = EventListenerTouchOneByOne::create();
+		notouchListener->setSwallowTouches(false);
+		notouchListener->onTouchBegan = CC_CALLBACK_2(StartLayer::TouchBegan, this);
+		notouchListener->onTouchEnded = CC_CALLBACK_2(StartLayer::TouchEnded, this);
+		_eventDispatcher->addEventListenerWithSceneGraphPriority(notouchListener, pSprite->getChildByName("startui")->getChildByName("notouch"));
 		//_eventDispatcher->pauseEventListenersForTarget(pSprite->getChildByName("startui")->getChildByName("notouch"));
 		for (int i = 0; i <3; i++){
 			std::string tesname = String::createWithFormat("tes%d", i)->_string;

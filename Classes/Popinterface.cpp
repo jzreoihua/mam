@@ -213,8 +213,7 @@ void Popinterface::TouchEnded(Touch* pTouch, Event* pEvent)
 			
 			this->removeFromParent();
 			istanc = false;
-			auto _GameScene = (GameScene*)Director::getInstance()->getRunningScene()->getChildByName("gameScene");
-			_GameScene->schedule(schedule_selector(GameScene::loop), 1.0f);
+			//auto _GameScene = (GameScene*)Director::getInstance()->getRunningScene()->getChildByName("gameScene");
 			
 			//disappear();
 		}//主界面按钮和确定按钮
@@ -499,8 +498,6 @@ void Popinterface::btncallFunc(Object *pSender, cocos2d::ui::Button::TouchEventT
 			butten->stopAllActions();
 			auto targetScTo2 = ScaleTo::create(0.117f, 1.0f);
 			butten->runAction(targetScTo2);
-			auto pBubble = Bubble::create();
-			pBubble->unschedule(schedule_selector(Bubble::loop));
 			
 			 if (butten->getName() == "goumbtn1")//去除广告
 			{

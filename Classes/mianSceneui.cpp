@@ -28,7 +28,9 @@ bool mianSceneui::init()
 
 		Size winSize = Director::getInstance()->getVisibleSize();
 		ZipUtils::setPvrEncryptionKey(0x4ab3603a, 0x654c9a30, 0x55be3b35, 0xa7337055);
+		Texture2D::PVRImagesHavePremultipliedAlpha(true);//解决打包图片白边
 		SpriteFrameCache::getInstance()->addSpriteFramesWithFile("zhujiemui.plist", "zhujiemui.pvr.ccz");
+		
 		MainSuiNode = CSLoader::createNode("csb/MainSui.csb");
 		MainSuiNode->setPosition(Point::ZERO);
 		MainSuiNode->setAnchorPoint(Point::ZERO);
@@ -38,7 +40,14 @@ bool mianSceneui::init()
 		hengView->setScrollBarEnabled(false);
 		hengView->setVisible(false);
 
+		xuanzong = ui::ImageView::create("xuanzong.png", cocos2d::ui::Widget::TextureResType::PLIST);//选中图片框
+		xuanzong->setAnchorPoint(Point::ZERO);
+		
+		
+
 		auto wuping = (ui::Layout*)MainSuiNode->getChildByName("mainui")->getChildByName("wuping");
+		wuping->addChild(xuanzong);
+		xuanzong->setPositionX(-xuanzong->getContentSize().width);
 		wuping->setPositionX(winSize.width - wuping->getContentSize().width);
 		dutu_ly = (ui::Layout*)MainSuiNode->getChildByName("mainui")->getChildByName("wuping")->getChildByName("dutu_ly");//侦听选择语言点击
 		dutu_ly->setPositionX(dutu_ly->getContentSize().width);
@@ -51,26 +60,31 @@ bool mianSceneui::init()
 		dutu_ly->getChildByName("tishibtn")->setVisible(false);
 
 		auto touchListener = EventListenerTouchOneByOne::create();
-		touchListener->setSwallowTouches(false);
+		touchListener->setSwallowTouches(true);
 		touchListener->onTouchBegan = CC_CALLBACK_2(mianSceneui::TouchBegan, this);
 		touchListener->onTouchEnded = CC_CALLBACK_2(mianSceneui::TouchEnded, this);
 		_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener->clone(), MainSuiNode->getChildByName("mainui")->getChildByName("zhucaid"));//左边弹出箭头按钮
 		_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener->clone(), dutu_ly->getChildByName("youtanann1_8"));//右边弹窗箭头按钮
-		//_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener->clone(), (Sprite*)dutu_ly->getChildByName("tishibtn"));
-		_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener->clone(), MainSuiNode->getChildByName("mainui")->getChildByName("notouch"));
+		_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener->clone(), dutu_ly->getChildByName("tishibtn"));
+
+		auto notouchListener = EventListenerTouchOneByOne::create();
+		notouchListener->setSwallowTouches(false);
+		notouchListener->onTouchBegan = CC_CALLBACK_2(mianSceneui::TouchBegan, this);
+		notouchListener->onTouchEnded = CC_CALLBACK_2(mianSceneui::TouchEnded, this);
+		_eventDispatcher->addEventListenerWithSceneGraphPriority(notouchListener, MainSuiNode->getChildByName("mainui")->getChildByName("notouch"));
 
 		for (int i = 0; i <3; i++){
 			std::string tesname = String::createWithFormat("tes%d", i)->_string;
 			auto tes = (ui::Button*)hengView->getChildByName(tesname.c_str());
 			tes->addTouchEventListener(CC_CALLBACK_2(mianSceneui::btncallFunc, this));//添加左上按钮事件
-
+			_eventDispatcher->pauseEventListenersForTarget(tes);
+		
 			std::string tesiname = String::createWithFormat("tesi%d", i)->_string;
 			auto tesi = (ui::Button*)wupView->getChildByName(tesiname.c_str());
 			tesi->addTouchEventListener(CC_CALLBACK_2(mianSceneui::btncallFunc, this));//添加右边薯条事件
 
 		}
-		auto tishibtn = (ui::Button*)dutu_ly->getChildByName("tishibtn");
-		tishibtn->addTouchEventListener(CC_CALLBACK_2(mianSceneui::btncallFunc, this));
+
 		this->runAction(Sequence::create(
 			//DelayTime::create(0.0f),
 			CallFunc::create([=](){
@@ -83,7 +97,28 @@ bool mianSceneui::init()
 
     return bRet;
 }
-
+void mianSceneui::setyouwup(Sprite *target){
+	ui::Layout *pLayout = ui::Layout::create();
+	
+	pLayout->setSize(cocos2d::CCSizeMake(64, 63));
+	pLayout->setAnchorPoint(Point::ZERO);
+	pLayout->addChild(target);
+	target->setPosition(0, 0);
+	target->setAnchorPoint(Point::ZERO);
+	ui::Button *botton = ui::Button::create("kongbai.png", "kongbai.png", "", cocos2d::ui::Button::TextureResType::PLIST);
+	//pLayout->addTouchEventListener(CC_CALLBACK_2(mianSceneui::btncallFunc, this));
+	botton->setAnchorPoint(Point::ANCHOR_MIDDLE);
+	//botton->setSize(cocos2d::CCSizeMake(64, 63));
+	botton->setPosition(Vec2(pLayout->getContentSize().width / 2, pLayout->getContentSize().height/2));
+	botton->addTouchEventListener(CC_CALLBACK_2(mianSceneui::btncallFunc, this));
+	botton->setName(target->getName());
+	pLayout->addChild(botton);
+	
+	
+	wupView->pushBackCustomItem(pLayout);
+	
+	pLayout->setPosition(Vec2(0,0));
+}
 
 bool mianSceneui::TouchBegan(Touch* pTouch, Event* pEvent)
 {
@@ -149,6 +184,13 @@ void mianSceneui::TouchEnded(Touch* pTouch, Event* pEvent)
 			tewupList(target);
 
 		}
+		else if (target->getName() == "tishibtn"){
+			auto ly = (Popinterface*)Popinterface::create(2);//2是提示界面
+			ly->setPosition(Point::ZERO);
+			ly->setAnchorPoint(Point::ZERO);
+			ly->setguankNum(strguankNum);
+			this->addChild(ly);
+		}
 		
 	}
 }
@@ -157,7 +199,7 @@ void mianSceneui::setguankNum(int num){
 	return;
 }
 void mianSceneui::btncallFunc(Object *pSender, cocos2d::ui::Button::TouchEventType type){
-	auto butten = (Sprite*)pSender;
+	auto butten = (ui::Button*)pSender;
 	unsigned int tag = butten->getTag();
 	auto targetScTo = ScaleTo::create(0.108f, 1.2928f);
 
@@ -179,7 +221,8 @@ void mianSceneui::btncallFunc(Object *pSender, cocos2d::ui::Button::TouchEventTy
 
 			butten->stopAllActions();
 			auto targetScTo2 = ScaleTo::create(0.217f, 1.0f);
-			butten->runAction(Sequence::create(
+			butten->runAction(targetScTo2);
+			/*butten->runAction(Sequence::create(
 				targetScTo2,
 				CallFunc::create([=](){
 
@@ -191,7 +234,7 @@ void mianSceneui::btncallFunc(Object *pSender, cocos2d::ui::Button::TouchEventTy
 				}
 			}
 			),
-				NULL));
+				NULL));*/
 
 			
 			if (butten->getName() == "tes0")//音效
@@ -202,15 +245,17 @@ void mianSceneui::btncallFunc(Object *pSender, cocos2d::ui::Button::TouchEventTy
 				if (UserDefault::getInstance()->getBoolForKey("iseffectpalying")){
 					
 					UserDefault::getInstance()->setBoolForKey("iseffectpalying", false);
-					butten->setSpriteFrame(spme1);
+					//butten->setSpriteFrame(spme1);
 					//SimpleAudioEngine::getInstance()->pauseAllEffects();
+					butten->loadTextures("yinxiao2.png", "yinxiao2.png", "", cocos2d::ui::Button::TextureResType::PLIST);
 					SimpleAudioEngine::getInstance()->setEffectsVolume(0.0);
 				}
 				else{
 
 					//iseffectpalying = true;
 					UserDefault::getInstance()->setBoolForKey("iseffectpalying", true);
-					butten->setSpriteFrame(spme);
+					//butten->setSpriteFrame(spme);
+					butten->loadTextures("yinxiao.png", "yinxiao.png", "", cocos2d::ui::Button::TextureResType::PLIST);
 					SimpleAudioEngine::getInstance()->setEffectsVolume(1.0);
 					//SimpleAudioEngine::getInstance()->resumeAllEffects();
 				}
@@ -219,21 +264,28 @@ void mianSceneui::btncallFunc(Object *pSender, cocos2d::ui::Button::TouchEventTy
 			}
 			else if (butten->getName() == "tes1")//音乐
 			{
-				auto spme = SpriteFrameCache::getInstance()->getSpriteFrameByName("yinyue.png");
-				auto spme1 = SpriteFrameCache::getInstance()->getSpriteFrameByName("yinyue2.png");
-				butten->setSpriteFrame(spme1);
-				/*if (SimpleAudioEngine::getInstance()->isBackgroundMusicPlaying()){
+				//butten->loadTextures()
+				//butten->setBright()
+				
+
+				/*auto spme = SpriteFrameCache::getInstance()->getSpriteFrameByName("yinyue.png");
+				auto spme1 = SpriteFrameCache::getInstance()->getSpriteFrameByName("yinyue2.png");*/
+				//Size s = butten->getContentSize();
+				//Rect rect = Rect(0, 0, s.width, s.height);
+				//auto spme = SpriteFrame::create("res/tc/gou.png", rect);
+				//butten->setSpriteFrame(spme);
+				if (SimpleAudioEngine::getInstance()->isBackgroundMusicPlaying()){
 
 
-					butten->setSpriteFrame(spme1);
+					butten->loadTextures("yinyue2.png", "yinyue2.png", "", cocos2d::ui::Button::TextureResType::PLIST);
 					UserDefault::getInstance()->setBoolForKey("ismicpalying", false);
 					SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
 				}
 				else{
-					butten->setSpriteFrame(spme);
+					butten->loadTextures("yinyue.png", "yinyue.png", "", cocos2d::ui::Button::TextureResType::PLIST);
 					UserDefault::getInstance()->setBoolForKey("ismicpalying", true);
 					SimpleAudioEngine::getInstance()->resumeBackgroundMusic();
-				}*/
+				}
 			}
 			else if (butten->getName() == "tes2")//返回主菜单
 			{
@@ -244,13 +296,25 @@ void mianSceneui::btncallFunc(Object *pSender, cocos2d::ui::Button::TouchEventTy
 				ly->setguankNum(strguankNum);
 				this->addChild(ly);
 			}
-			else if (butten->getName() == "tishibtn"){
-				auto ly = (Popinterface*)Popinterface::create(2);//2是提示界面
-				ly->setPosition(Point::ZERO);
-				ly->setAnchorPoint(Point::ZERO);
-				ly->setguankNum(strguankNum);
-				this->addChild(ly);
+			else{
+				auto _GameScene = (GameScene*)Director::getInstance()->getRunningScene()->getChildByName("gameScene");
+				if (xuanzong->getParent() != butten){
+					xuanzong->retain();
+					xuanzong->removeFromParent();
+					xuanzong->setPositionX(0);
+					butten->addChild(xuanzong);
+					
+					_GameScene->clickwup(butten->getName());
+					log("butten:%s", butten->getName().c_str());
+				}
+				else{
+					
+					xuanzong->retain();
+					xuanzong->removeFromParent();
+					_GameScene->clickwup(butten->getName(),true);
+				}
 			}
+			
 
 		}
 		break;
@@ -288,7 +352,9 @@ void mianSceneui::selectedItemEvent(Ref* pSender, cocos2d::ui::ListView::EventTy
 																	 CC_UNUSED_PARAM(listView);
 																	 CCLOG("select child start index = %ld", listView->getCurSelectedIndex());
 																	 break;
+																	 
 	}
+
 	case cocos2d::ui::ListView::EventType::ON_SELECTED_ITEM_END:
 	{
 																   SimpleAudioEngine::getInstance()->playEffect("uibtn_eff.wav");
@@ -314,7 +380,8 @@ void mianSceneui::teshuList(Sprite *target)
 	hengView->setPositionY(yuyanxy.y);*/
 	std::string framename = String::createWithFormat("%s2.png", target->getName().c_str())->_string;
 	std::string targetframename = String::createWithFormat("%s.png", target->getName().c_str())->_string;
-	if (!hengView->isVisible()){
+	if (!hengView->isVisible()){//弹出
+
 		SpriteFrame* targetframe2 = SpriteFrameCache::getInstance()->getSpriteFrameByName(framename);
 		target->setSpriteFrame(targetframe2);
 		_eventDispatcher->resumeEventListenersForTarget(MainSuiNode->getChildByName("mainui")->getChildByName("notouch"));
@@ -332,12 +399,27 @@ void mianSceneui::teshuList(Sprite *target)
 
 			hengView->setTouchEnabled(true);
 			isyuyantouch = true;
+			for (int i = 0; i <3; i++){
+				std::string tesname = String::createWithFormat("tes%d", i)->_string;
+				auto tes = (ui::Button*)hengView->getChildByName(tesname.c_str());
+				_eventDispatcher->resumeEventListenersForTarget(tes);
+				
+
+			}
 		}
 		),
 			NULL));
 
 	}
 	else{
+		//回收
+		for (int i = 0; i <3; i++){
+			std::string tesname = String::createWithFormat("tes%d", i)->_string;
+			auto tes = (ui::Button*)hengView->getChildByName(tesname.c_str());
+			//添加左上按钮事件
+			_eventDispatcher->pauseEventListenersForTarget(tes);
+
+		}
 		SpriteFrame* targetframe = SpriteFrameCache::getInstance()->getSpriteFrameByName(targetframename);
 		target->setSpriteFrame(targetframe);
 		Vec2 yuyanxy = Vec2(-shusize.width,hengView->getPositionY());
@@ -350,6 +432,7 @@ void mianSceneui::teshuList(Sprite *target)
 			CallFunc::create([=](){
 			hengView->setVisible(false);
 			isyuyantouch = true;
+			
 		}
 		),
 			NULL));

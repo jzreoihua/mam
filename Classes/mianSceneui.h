@@ -22,19 +22,21 @@ public:
 	mianSceneui();
 	~mianSceneui();
     virtual bool init();  
+	void setyouwup(Sprite *target);
 	void setguankNum(int num);
+
+    
 	void btncallFunc(Object *pSender, cocos2d::ui::Button::TouchEventType type);
 	void selectedItemEvent(Ref* pSender, cocos2d::ui::ListView::EventType type);
 	void teshuList(Sprite *target);
 	void tewupList(Sprite *target);
 	virtual bool TouchBegan(cocos2d::Touch* pTouch, cocos2d::Event* pEvent);
 	virtual void TouchEnded(cocos2d::Touch* pTouch, cocos2d::Event* pEvent);
-
-    CREATE_FUNC(mianSceneui);
+	CREATE_FUNC(mianSceneui);
 private:
 	bool isyuyantouch;
 	bool islistouch;
-
+	ui::ImageView* xuanzong;
 	ui::ListView* hengView;
 	ui::Layout* zhuView;
 	ui::ListView* wupView;
